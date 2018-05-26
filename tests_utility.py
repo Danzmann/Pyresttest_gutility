@@ -74,7 +74,7 @@ def results_screen(detail_results, just_errors=False, simplified=False):
                             print(a)
                         print("------------ DEBUG -----------")
                         print(json_output(result[ind+1], simplified))
-                except:
+                except Exception as e:
                     continue
 
 
@@ -269,7 +269,7 @@ def subprocess_run(test, args):
     try:
         process_results(result, args)
     except Exception as e:
-        print ("An error has occured: " + e.message)
+        print("An error has occured: " + str(e))
     return
 
 
@@ -317,6 +317,23 @@ def argument_run(arguments):
         return -1
 
 
+def run_test(args):
+    print("Type the number of the test to be executed: ")
+    for test in TESTS_LISTS:
+        print("Test " + test["number"] + ": " + test["name"])
+    choice = input("--> ")
+
+    if choice in range(1,len(TESTS_LISTS)+1):
+        subprocess_run(TESTS_LISTS[int(choice)]["name"], args)
+
+    else:
+        print("Unknown test option")
+
+
+def add_test():
+    name = input("Type name of test to be created: ")
+
+
 def run_choice(choice, args=None):
     """
     Runs specific test according to choice from menu or argument
@@ -325,8 +342,14 @@ def run_choice(choice, args=None):
     :param args: in case of arguments, pass arguments over to next function
     """
     if choice == "1":
-
         subprocess_run("quickstart.yaml", args)
+
+    elif choice == "2":
+        run_test(args)
+
+    elif choice == "3":
+
+        add_test()
 
     else:
         print("Unknown option, please try again")
@@ -399,6 +422,8 @@ def main():
     while True:
         print("\n\nMenu:")
         print("1- Quick API tests (all APIs)\n"
+              "2- Execute specific test\n"
+              "3- Add new test\n"
               "0- Quit")
         choice = str(input("-> "))
 
@@ -410,4 +435,5 @@ def main():
 
 
 if __name__ == "__main__":
+    TESTS_LISTS = []
     main()
