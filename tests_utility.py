@@ -2,11 +2,9 @@ import sys
 import subprocess
 import re
 import os
-import signal
 import moment
 import json
 import argparse
-import time
 
 __author__ = "Nathan Danzmann de Freitas"
 
@@ -143,7 +141,7 @@ def show_results(detail_results, test_results, args):
                   "2- Just errors\n"
                   "3- Just errors simplified (minimal output)\n"
                   "4- Nothing")
-            choice = str(raw_input("-> "))
+            choice = str(input("-> "))
 
             if choice in ("1", "2", "3"):
 
@@ -158,7 +156,7 @@ def show_results(detail_results, test_results, args):
                     simplified = True
 
                 print("\n\n\n1- DEBUG on Screen\n2- Write DEBUG to file\n3- Both previous")
-                choice = str(raw_input("-> "))
+                choice = str(input("-> "))
 
                 if choice == "1":
                     results_screen(detail_results, just_errors, simplified)
@@ -262,7 +260,7 @@ def subprocess_run(test, args):
     """
     print("\nStarting test '" + test + "...'")
     process = subprocess.Popen(['pyresttest', 'url', test, '--import_extensions',
-                                "ffone_tests_extension", "--verbose", "--log", "DEBUG"],
+                                "tests_extension", "--verbose", "--log", "DEBUG"],
                                stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                                stderr=subprocess.STDOUT, shell=False)
     print("\nPlease wait while test is being run")
@@ -330,22 +328,6 @@ def run_choice(choice, args=None):
 
         subprocess_run("quickstart.yaml", args)
 
-    elif choice == "2":
-
-        subprocess_run('accounts_test.yaml', args)
-
-    elif choice == "3":
-
-        subprocess_run('surveys_test.yaml', args)
-
-    elif choice == "4":
-
-        subprocess_run('calendar_test.yaml', args)
-
-    elif choice == "5":
-
-        subprocess_run('contacts_test.yaml', args)
-
     else:
         print("Unknown option, please try again")
     return
@@ -356,8 +338,8 @@ def main():
     Main
 
     """
-    parser = argparse.ArgumentParser(description="Automatically tests REST APIs in FFOne.\nArguments are optional and"
-                                                 " all configuration can be done real-time on terminal menu.\n"
+    parser = argparse.ArgumentParser(description="Automatically tests REST APIs with pyresttest.\nArguments optional"
+                                                 " and all configuration can be done real-time on terminal menu.\n"
                                                  "Menu is opened on execution of test_utility with no args,"
                                                  "otherwise all operations can be done on following arguments:")
     parser.add_argument('-t', '--test-api', type=int, required=False,
@@ -401,8 +383,6 @@ def main():
               "is not allowed, except if writing to file [-w]")
         exit(1)
 
-    # Stores django subprocess object, if started from utility
-    django = None
     # Stores result code from argument run if started from argument command line
     result_code = None
 
@@ -410,60 +390,22 @@ def main():
         print("Please rerun with python2")
         return
 
-    print("\n\nFieldForce One API tests utility")
-    print("Copyright: Fieldforce Mobile Solutions 2018\n")
-    print("Looking for django development server...\n")
-    django_pid = 0
-    # Search for python server
-    for line in os.popen("ps ax | grep " + "'manage.py runserver'" + " | grep -v grep"):
-        fields = line.split()
-        django_pid = fields[0]
-
-    if django_pid != 0:
-        print("Found django server running on PID: " + django_pid)
-        print("For improved debugging it is recommended to close the server and restart this application")
-        time.sleep(2)
-    else:
-        # Starts django server if not running
-        print("Django server is not running")
-        print("Attempting to start django development server temporarily...")
-        try:
-            django = subprocess.Popen("exec python2 manage.py runserver",
-                                      cwd="../../", stdout=subprocess.PIPE, shell=True)
-            time.sleep(4)
-            print("Django dev server started successfully\nIt will terminate automatically on closure of this"
-                  " application, please do not use Ctrl-C")
-        except Exception as e:
-            print("Could not start django server for error:\n" + e.message)
-            exit(1)
+    print("\n\nRESTful API test utility")
 
     # If started from argument command line, calls argument_run()
     if arguments.test_api is not None or arguments.all is True:
         result_code = argument_run(arguments)
 
-    if result_code == -1:
-        django.kill()
-        # os.killpg is needed as Popen object kill kills the shell but not the process for some reason...
-        os.killpg(os.getpgid(django.pid), signal.SIGTERM)
-
     while True:
         print("\n\nMenu:")
-        print("1- Quick API tests (GET on all APIs)\n"
-              "2- Accounts API tests\n"
-              "3- Surveys API tests\n"
-              "4- Calendar API tests\n"
-              "5- Contacts API tests\n"
+        print("1- Quick API tests (all APIs)\n"
               "0- Quit")
-        choice = str(raw_input("-> "))
+        choice = str(input("-> "))
 
         if choice != "0":
             run_choice(choice)
 
         else:
-            if django is not None:
-                django.kill()
-                # os.killpg is needed as Popen object kill kills the shell but not the process for some reason...
-                os.killpg(os.getpgid(django.pid), signal.SIGTERM)
             break
 
 
