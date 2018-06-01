@@ -1,0 +1,5 @@
+test:
+  expected_code: '200'
+  method: GET
+  name: google
+  url: www.google.com

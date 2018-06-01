@@ -5,6 +5,7 @@ import os
 import moment
 import json
 import argparse
+import yaml
 
 __author__ = "Nathan Danzmann de Freitas"
 
@@ -259,6 +260,7 @@ def subprocess_run(test, args):
     :param args: In case of argument mode, pass arguments over to next function (process_results())
     """
     print("\nStarting test '" + test + "...'")
+    test = "tests/" + test
     process = subprocess.Popen(['pyresttest', 'url', test, '--import_extensions',
                                 "tests_extension", "--verbose", "--log", "DEBUG"],
                                stdout=subprocess.PIPE, stdin=subprocess.PIPE,
@@ -319,12 +321,14 @@ def argument_run(arguments):
 
 def run_test(args):
     print("Type the number of the test to be executed: ")
+    count = 0
     for test in TESTS_LISTS:
-        print("Test " + test["number"] + ": " + test["name"])
-    choice = input("--> ")
+        count += 1
+        print("Test " + str(count) + " : " + test)
+    choice = int(input("--> "))
 
-    if choice in range(1,len(TESTS_LISTS)+1):
-        subprocess_run(TESTS_LISTS[int(choice)]["name"], args)
+    if choice in tuple(range(1, len(TESTS_LISTS)+1)):
+        subprocess_run(TESTS_LISTS[choice], args)
 
     else:
         print("Unknown test option")
@@ -332,6 +336,26 @@ def run_test(args):
 
 def add_test():
     name = input("Type name of test to be created: ")
+    url = input("Type name of url for the test to be run")
+    method = input("Type the method which will be used (GET, PUT, POST, etc)")
+    expected_result = input("Type the expected HTTP return code (200, 204, 404, etc)")
+
+    data = {
+        "test": {
+            "name": name,
+            "url": url,
+            "method": method,
+            "expected_code": expected_result
+        }
+    }
+    import os
+    if not os.path.exists("tests"):
+        os.makedirs("tests")
+    try:
+        with open("tests/test_" + name + ".yaml", "w") as newtest:
+            yaml.dump(data, newtest, default_flow_style=False)
+    except Exception as e:
+        print(e)
 
 
 def run_choice(choice, args=None):
@@ -348,12 +372,20 @@ def run_choice(choice, args=None):
         run_test(args)
 
     elif choice == "3":
-
         add_test()
 
     else:
         print("Unknown option, please try again")
     return
+
+
+def find_tests():
+
+    if not os.path.exists("tests"):
+        return
+
+    for file in os.listdir("tests/"):
+        TESTS_LISTS.append(file)
 
 
 def main():
@@ -406,6 +438,10 @@ def main():
               "is not allowed, except if writing to file [-w]")
         exit(1)
 
+    find_tests()
+
+    print(TESTS_LISTS)
+
     # Stores result code from argument run if started from argument command line
     result_code = None
 
@@ -425,7 +461,7 @@ def main():
               "2- Execute specific test\n"
               "3- Add new test\n"
               "0- Quit")
-        choice = str(input("-> "))
+        choice = input("-> ")
 
         if choice != "0":
             run_choice(choice)
