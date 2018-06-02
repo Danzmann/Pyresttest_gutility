@@ -129,7 +129,7 @@ def show_results(detail_results, test_results, args):
     :param test_results: simple test results from processed string
     :param args: In case application is being run in arguments mode
     """
-    if args.test_api is None and args.all is False:
+    if args is None or (args.test_api is None and args.all is False):
 
         print("Test results: \n")
         for result in test_results:
@@ -320,6 +320,11 @@ def argument_run(arguments):
 
 
 def run_test(args):
+    """
+    Will run tests thatb exist in tests folder
+
+    :param args: args None parsing for result processing
+    """
     print("Type the number of the test to be executed: ")
     count = 0
     for test in TESTS_LISTS:
@@ -328,24 +333,31 @@ def run_test(args):
     choice = int(input("--> "))
 
     if choice in tuple(range(1, len(TESTS_LISTS)+1)):
-        subprocess_run(TESTS_LISTS[choice], args)
+        subprocess_run(TESTS_LISTS[choice-1], args)
 
     else:
         print("Unknown test option")
 
 
 def add_test():
+    """
+    Will add a new test to the database
+
+    """
     name = input("Type name of test to be created: ")
     url = input("Type name of url for the test to be run")
     method = input("Type the method which will be used (GET, PUT, POST, etc)")
     expected_result = input("Type the expected HTTP return code (200, 204, 404, etc)")
 
     data = {
+        "config": {
+            "testset": "test_for_"+name
+        }
         "test": {
-            "name": name,
-            "url": url,
-            "method": method,
-            "expected_code": expected_result
+            "name": str(name),
+            "url": str(url),
+            "method": str(method),
+            "expected_code": str(expected_result)
         }
     }
     import os
@@ -438,9 +450,6 @@ def main():
               "is not allowed, except if writing to file [-w]")
         exit(1)
 
-    find_tests()
-
-    print(TESTS_LISTS)
 
     # Stores result code from argument run if started from argument command line
     result_code = None
@@ -456,6 +465,7 @@ def main():
         result_code = argument_run(arguments)
 
     while True:
+        find_tests()
         print("\n\nMenu:")
         print("1- Quick API tests (all APIs)\n"
               "2- Execute specific test\n"

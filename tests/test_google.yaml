@@ -1,5 +1,8 @@
+config:
+  testset: "Tests"
+    
 test:
+  name: "google"
   expected_code: '200'
-  method: GET
-  name: google
-  url: www.google.com
+  method: "GET"
+  url: "www.google.com"
