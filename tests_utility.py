@@ -445,8 +445,8 @@ def main():
     # Stores result code from argument run if started from argument command line
     result_code = None
 
-    if sys.version_info[0] > 3:
-        print("Please rerun with python2")
+    if sys.version_info[0] < 3:
+        print("Please rerun with python3")
         return
 
     print("\n\nRESTful API test utility")
